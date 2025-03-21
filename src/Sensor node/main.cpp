@@ -1,19 +1,39 @@
+#include <WebSocketsClient.h>
+#include <ArduinoJson.h>
 #include <Arduino.h>
+#include <WiFi.h>
 #include "DHT.h"
 
 #define DHTTYPE DHT11
 #define DHTPIN 4
 
 DHT dht(DHTPIN, DHTTYPE);
+WebSocketsClient webSocket;
+
+const char *ssid = "your_SSID";
+const char *password = "your_PASSWORD";
+const char *websocket_server = "your_server_ip";
 
 void setup()
 {
     Serial.begin(115200);
     dht.begin();
+
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(1000);
+        Serial.println("Connecting to WiFi...");
+    }
+
+    webSocket.begin(websocket_server, 8765, "/");
+    webSocket.onEvent(webSocketEvent);
 }
 
 void loop()
 {
+    webSocket.loop();
+
     float h = dht.readHumidity();
     float t = dht.readTemperature();
 
@@ -21,5 +41,40 @@ void loop()
     {
         Serial.println(F("Failed to read from DHT sensor!"));
         return;
+    }
+
+    // Create a JSON object
+    StaticJsonDocument<200> doc;
+    doc["type"] = "New environment data";
+    doc["temperature"] = t;
+    doc["humidity"] = h;
+
+    // Serialize JSON to string
+    String json;
+    serializeJson(doc, json);
+
+    // Send JSON string
+    webSocket.sendTXT(json);
+
+    delay(2000); // Send data every 2 seconds
+}
+
+void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
+{
+    switch (type)
+    {
+    case WStype_DISCONNECTED:
+        Serial.println("WebSocket Disconnected");
+        break;
+    case WStype_CONNECTED:
+        Serial.println("WebSocket Connected");
+        break;
+    case WStype_TEXT:
+        Serial.printf("Received message: %s\n", payload);
+        // Handle the received message here
+        break;
+    case WStype_BIN:
+        Serial.println("Received binary data");
+        break;
     }
 }
