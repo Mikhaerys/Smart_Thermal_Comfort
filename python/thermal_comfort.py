@@ -29,3 +29,12 @@ class ThermalComfort:
             met=self.met,
             clo=self.clo
         )['pmv']
+
+    def average_pmv(self, student_pmvs):
+        return sum(student_pmvs) / len(student_pmvs)
+
+    def classroom_pmv(self, ta, rh, student_pmvs):
+        mesured_pmv = self.calculate_pmv(ta, rh)
+        avg_pmv = self.average_pmv(student_pmvs)
+
+        return (mesured_pmv + avg_pmv) / 2
