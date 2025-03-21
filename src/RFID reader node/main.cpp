@@ -47,11 +47,15 @@ void loop()
         return;
 
     String uid = uidToDecString(rfid.uid.uidByte, rfid.uid.size);
+    int tempThermalFeeling = 0;
+    int tempInClass = 1;
 
     // Create a JSON object
     StaticJsonDocument<200> doc;
     doc["type"] = "New scan";
     doc["UID"] = uid;
+    doc["Thermal Feeling"] = tempThermalFeeling;
+    doc["In Class"] = tempInClass;
 
     // Serialize JSON to string
     String json;
