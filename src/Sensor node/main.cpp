@@ -72,6 +72,19 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     case WStype_TEXT:
         Serial.printf("Received message: %s\n", payload);
         // Handle the received message here
+        {
+            String action = String((char *)payload);
+            if (action == "turn_on_cooler")
+            {
+                Serial.println("Action: Turn on cooler");
+                // Add code to turn on the cooler
+            }
+            else if (action == "turn_off_cooler")
+            {
+                Serial.println("Action: Turn off cooler");
+                // Add code to turn off the cooler
+            }
+        }
         break;
     case WStype_BIN:
         Serial.println("Received binary data");

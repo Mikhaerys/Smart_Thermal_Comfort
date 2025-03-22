@@ -75,6 +75,11 @@ class SmartThermalComfort:
                         temperature, humidity, self.student_pmvs
                     )
 
+                    if classroom_pmv > 0.5:
+                        await websocket.send("turn_on_cooler")
+                    elif classroom_pmv < -0.5:
+                        await websocket.send("turn_off_cooler")
+
                 else:
                     print(f"Unknown message type: {message_type}")
             except json.JSONDecodeError:
