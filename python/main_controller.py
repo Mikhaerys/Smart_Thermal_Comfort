@@ -45,6 +45,14 @@ class SmartThermalComfort:
                     # Commit the changes
                     self.conn.commit()
 
+                    # Query the database for thermal feelings of students in class
+                    self.cursor.execute(
+                        "SELECT thermal_feeling FROM students WHERE in_class = 1"
+                    )
+                    self.student_pmvs = [
+                        row[0] for row in self.cursor.fetchall()
+                    ]
+
                 elif message_type == "New environment data":
                     temperature = data.get("temperature")
                     humidity = data.get("humidity")
@@ -61,6 +69,11 @@ class SmartThermalComfort:
 
                     # Commit the changes
                     self.conn.commit()
+
+                    # Calculate the classroom PMV
+                    classroom_pmv = self.thermal_comfort.classroom_pmv(
+                        temperature, humidity, self.student_pmvs
+                    )
 
                 else:
                     print(f"Unknown message type: {message_type}")
