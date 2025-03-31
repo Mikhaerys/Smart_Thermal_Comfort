@@ -1,5 +1,6 @@
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
+#include "Display_TFT.h"
 #include <MFRC522.h>
 #include <Arduino.h>
 #include <WiFi.h>
@@ -17,6 +18,7 @@ const char *websocket_server = "your_server_ip";
 
 // Function declarations
 String uidToDecString(byte *buffer, byte bufferSize);
+void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
 
 void setup()
 {
@@ -33,6 +35,8 @@ void setup()
 
     webSocket.begin(websocket_server, 8765, "/");
     webSocket.onEvent(webSocketEvent);
+
+    Display_TFT_init();
 }
 
 void loop()
@@ -47,15 +51,14 @@ void loop()
         return;
 
     String uid = uidToDecString(rfid.uid.uidByte, rfid.uid.size);
-    int tempThermalFeeling = 0;
-    int tempInClass = 1;
+    Display_TFT_loop(); // Call the display function
 
     // Create a JSON object
-    StaticJsonDocument<200> doc;
+    JsonDocument doc;
     doc["type"] = "New scan";
     doc["UID"] = uid;
-    doc["Thermal Feeling"] = tempThermalFeeling;
-    doc["In Class"] = tempInClass;
+    doc["Thermal Feeling"] = thermalComfort;
+    doc["In Class"] = (inClass) ? 1 : 0;
 
     // Serialize JSON to string
     String json;

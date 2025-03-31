@@ -14,6 +14,8 @@ const char *ssid = "your_SSID";
 const char *password = "your_PASSWORD";
 const char *websocket_server = "your_server_ip";
 
+void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
+
 void setup()
 {
     Serial.begin(115200);
@@ -44,7 +46,7 @@ void loop()
     }
 
     // Create a JSON object
-    StaticJsonDocument<200> doc;
+    JsonDocument doc;
     doc["type"] = "New environment data";
     doc["temperature"] = t;
     doc["humidity"] = h;
