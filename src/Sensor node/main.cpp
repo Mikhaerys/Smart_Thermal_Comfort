@@ -7,6 +7,8 @@
 #define DHTTYPE DHT11
 #define DHTPIN 4
 
+const int relay = 26;
+
 DHT dht(DHTPIN, DHTTYPE);
 WebSocketsClient webSocket;
 
@@ -19,6 +21,7 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
 void setup()
 {
     Serial.begin(115200);
+    pinMode(relay, OUTPUT);
     dht.begin();
 
     WiFi.begin(ssid, password);
@@ -79,12 +82,12 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
             if (action == "turn_on_cooler")
             {
                 Serial.println("Action: Turn on cooler");
-                // Add code to turn on the cooler
+                digitalWrite(relay, LOW);
             }
             else if (action == "turn_off_cooler")
             {
                 Serial.println("Action: Turn off cooler");
-                // Add code to turn off the cooler
+                digitalWrite(relay, HIGH);
             }
         }
         break;
