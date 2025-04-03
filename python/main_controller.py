@@ -15,9 +15,8 @@ class SmartThermalComfort:
 
     async def handle_connection(self, websocket):
         async for message in websocket:
-            print(f"Received message: {message}")
-
             try:
+                print(f"Received message: {message}")
                 # Parse the JSON message
                 data = json.loads(message)
                 message_type = data.get("type")
@@ -53,6 +52,7 @@ class SmartThermalComfort:
                     self.student_pmvs = [
                         row[0] for row in self.cursor.fetchall()
                     ]
+                    print(f"Student PMVs: {self.student_pmvs}")
 
                 elif message_type == "New environment data":
                     temperature = data.get("temperature")

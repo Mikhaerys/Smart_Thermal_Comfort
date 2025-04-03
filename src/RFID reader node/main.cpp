@@ -35,6 +35,7 @@ void setup()
 
     webSocket.begin(websocket_server, 8765, "/");
     webSocket.onEvent(webSocketEvent);
+    Serial.println("Connected to WiFi");
 
     Display_TFT_init();
 }
@@ -87,5 +88,25 @@ String uidToDecString(byte *buffer, byte bufferSize)
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
 {
-    // Handle WebSocket events here
+    switch (type)
+    {
+    case WStype_DISCONNECTED:
+        Serial.println("WebSocket Disconnected. Reconnecting...");
+        webSocket.begin(websocket_server, 8765, "/");
+        break;
+    case WStype_CONNECTED:
+        Serial.println("WebSocket Connected");
+        break;
+    case WStype_BIN:
+        Serial.println("Received binary data");
+        break;
+    case WStype_PING:
+        Serial.println("Received ping");
+        break;
+    case WStype_PONG:
+        Serial.println("Received pong");
+        break;
+    default:
+        break;
+    }
 }

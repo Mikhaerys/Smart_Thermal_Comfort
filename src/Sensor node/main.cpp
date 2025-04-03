@@ -33,35 +33,46 @@ void setup()
 
     webSocket.begin(websocket_server, 8765, "/");
     webSocket.onEvent(webSocketEvent);
+    Serial.println("Connected to WiFi");
 }
 
 void loop()
 {
     webSocket.loop();
 
-    float h = dht.readHumidity();
-    float t = dht.readTemperature();
-
-    if (isnan(h) || isnan(t))
+    static unsigned long lastSendTime = 0;
+    if (millis() - lastSendTime > 5000)
     {
-        Serial.println(F("Failed to read from DHT sensor!"));
-        return;
+        lastSendTime = millis();
+
+        float h = dht.readHumidity();
+        float t = dht.readTemperature();
+
+        if (isnan(h) || isnan(t))
+        {
+            Serial.println(F("Failed to read from DHT sensor!"));
+            return;
+        }
+
+        Serial.print("Humidity: ");
+        Serial.print(h);
+        Serial.print("%  Temperature: ");
+        Serial.println(t);
+
+        // Create a JSON object
+        JsonDocument doc;
+        doc["type"] = "New environment data";
+        doc["temperature"] = t;
+        doc["humidity"] = h;
+
+        // Serialize JSON to string
+        String json;
+        serializeJson(doc, json);
+
+        // Send JSON string
+        webSocket.sendTXT(json);
+        Serial.println("Data sent to server.");
     }
-
-    // Create a JSON object
-    JsonDocument doc;
-    doc["type"] = "New environment data";
-    doc["temperature"] = t;
-    doc["humidity"] = h;
-
-    // Serialize JSON to string
-    String json;
-    serializeJson(doc, json);
-
-    // Send JSON string
-    webSocket.sendTXT(json);
-
-    delay(2000); // Send data every 2 seconds
 }
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
@@ -69,7 +80,8 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
     switch (type)
     {
     case WStype_DISCONNECTED:
-        Serial.println("WebSocket Disconnected");
+        Serial.println("WebSocket Disconnected. Reconnecting...");
+        webSocket.begin(websocket_server, 8765, "/");
         break;
     case WStype_CONNECTED:
         Serial.println("WebSocket Connected");
@@ -82,17 +94,25 @@ void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
             if (action == "turn_on_cooler")
             {
                 Serial.println("Action: Turn on cooler");
-                digitalWrite(relay, LOW);
+                digitalWrite(relay, HIGH);
             }
             else if (action == "turn_off_cooler")
             {
                 Serial.println("Action: Turn off cooler");
-                digitalWrite(relay, HIGH);
+                digitalWrite(relay, LOW);
             }
         }
         break;
     case WStype_BIN:
         Serial.println("Received binary data");
+        break;
+    case WStype_PING:
+        Serial.println("Received ping");
+        break;
+    case WStype_PONG:
+        Serial.println("Received pong");
+        break;
+    default:
         break;
     }
 }
