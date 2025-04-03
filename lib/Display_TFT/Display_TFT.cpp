@@ -28,7 +28,7 @@ void Display_TFT_init()
 
 void Display_TFT_loop()
 {
-    while (sendData)
+    while (!sendData)
     {
 
         uint16_t t_x = 0, t_y = 0;
@@ -80,6 +80,7 @@ void Display_TFT_loop()
             }
         }
     }
+    sendData = false;
 }
 
 void drawKeypad()

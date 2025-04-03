@@ -6,8 +6,8 @@
 #include <WiFi.h>
 #include <SPI.h>
 
-#define SS_PIN 10
-#define RST_PIN 9
+#define SS_PIN 5
+#define RST_PIN 0
 
 MFRC522 rfid(SS_PIN, RST_PIN);
 WebSocketsClient webSocket;
@@ -51,7 +51,10 @@ void loop()
         return;
 
     String uid = uidToDecString(rfid.uid.uidByte, rfid.uid.size);
+    Serial.println("UID: " + uid);
     Display_TFT_loop(); // Call the display function
+
+    Serial.println("Sending data to server...");
 
     // Create a JSON object
     JsonDocument doc;

@@ -6,3 +6,4 @@
 
 db/*.db
 python/.venv
+python/__pycache__

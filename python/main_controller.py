@@ -11,6 +11,7 @@ class SmartThermalComfort:
         self.cursor = self.conn.cursor()
         self.thermal_comfort = ThermalComfort()
         self.student_pmvs = []
+        print("Connected to the database.")
 
     async def handle_connection(self, websocket):
         async for message in websocket:
@@ -82,11 +83,18 @@ class SmartThermalComfort:
 
                 else:
                     print(f"Unknown message type: {message_type}")
+
             except json.JSONDecodeError:
                 print("Failed to decode JSON message")
+            except sqlite3.Error as e:
+                print(f"Database error: {e}")
+            except websockets.exceptions.ConnectionClosedError as e:
+                print(f"WebSocket connection closed: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
 
     async def main(self):
-        async with websockets.serve(self.handle_connection, "localhost", 8765):
+        async with websockets.serve(self.handle_connection, "192.168.0.x", 8765):
             await asyncio.Future()  # Run forever
 
     def close(self):
