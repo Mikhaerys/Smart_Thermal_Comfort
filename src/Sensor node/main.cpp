@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include "DHT.h"
+#include <AESLib.h>  // Incluir librería AES
 
 #define DHTTYPE DHT11
 #define DHTPIN 4
@@ -11,10 +12,24 @@ const int relay = 26;
 
 DHT dht(DHTPIN, DHTTYPE);
 WebSocketsClient webSocket;
+AESLib aesLib;
 
 const char *ssid = "your_SSID";
 const char *password = "your_PASSWORD";
 const char *websocket_server = "your_server_ip";
+
+// Clave en formato hexadecimal: 01 23 45 67 89 ab cd ef 01 23 45 67 89 ab cd ef
+byte key1[16] = { 
+    0x01, 0x23, 0x45, 0x67,
+    0x89, 0xab, 0xcd, 0xef, 
+    0x01, 0x23, 0x45, 0x67,
+    0x89, 0xab, 0xcd, 0xef };  // Clave en formato de byte
+byte iv[16] = {
+    0x02, 0x03, 0x05, 0x07,
+    0x09, 0x0b, 0x0d, 0xaf, 
+    0x10, 0x32, 0x54, 0x76, 
+    0x98, 0xab, 0xcd, 0xef};  // Vector de inicialización (IV), se puede personalizar
+
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
 
@@ -58,10 +73,23 @@ void loop()
     String json;
     serializeJson(doc, json);
 
-    // Send JSON string
-    webSocket.sendTXT(json);
+    // Convertir a char* con padding
+    int jsonLen = json.length() + 1;
+    char plainText[jsonLen];
+    json.toCharArray(plainText, jsonLen);
 
-    delay(2000); // Send data every 2 seconds
+    // Redondear al múltiplo de 16
+    int paddedLen = ((jsonLen + 15) / 16) * 16;
+    for (int i = jsonLen; i < paddedLen; i++) plainText[i] = '\0';
+
+    // Encriptar con AES-128 CBC
+    byte encrypted[paddedLen];
+    aesLib.encrypt((const byte*)plainText, paddedLen, encrypted, key1, 128, iv);
+
+    // Enviar datos cifrados al servidor por WebSocket
+    webSocket.sendBIN(encrypted, paddedLen);
+
+    delay(2000); // Enviar datos cada 2 segundos
 }
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
