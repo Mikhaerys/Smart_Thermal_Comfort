@@ -19,16 +19,8 @@ const char *password = "your_PASSWORD";
 const char *websocket_server = "your_server_ip";
 
 // Clave en formato hexadecimal: 01 23 45 67 89 ab cd ef 01 23 45 67 89 ab cd ef
-byte key1[16] = { 
-    0x01, 0x23, 0x45, 0x67,
-    0x89, 0xab, 0xcd, 0xef, 
-    0x01, 0x23, 0x45, 0x67,
-    0x89, 0xab, 0xcd, 0xef };  // Clave en formato de byte
-byte iv[16] = {
-    0x02, 0x03, 0x05, 0x07,
-    0x09, 0x0b, 0x0d, 0xaf, 
-    0x10, 0x32, 0x54, 0x76, 
-    0x98, 0xab, 0xcd, 0xef};  // Vector de inicialización (IV), se puede personalizar
+byte key1[16] = {clave de 16 digitos };  // Clave en formato de byte
+byte iv[16] = {clave 2 de 16 digitos};  // Vector de inicialización (IV), se puede personalizar
 
 
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
