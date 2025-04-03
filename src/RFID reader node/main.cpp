@@ -5,12 +5,15 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <SPI.h>
+#include <AESLib.h>  // Librería AES compatible con tu versión
+
 
 #define SS_PIN 5
 #define RST_PIN 0
 
 MFRC522 rfid(SS_PIN, RST_PIN);
 WebSocketsClient webSocket;
+AESLib aesLib;
 
 const char *ssid = "your_SSID";
 const char *password = "your_PASSWORD";
@@ -19,6 +22,22 @@ const char *websocket_server = "your_server_ip";
 // Function declarations
 String uidToDecString(byte *buffer, byte bufferSize);
 void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
+
+// Clave AES-128 de 16 bytes
+byte key1[16] = {
+    0x01, 0x23, 0x45, 0x67,
+    0x89, 0xab, 0xcd, 0xef,
+    0x01, 0x23, 0x45, 0x67,
+    0x89, 0xab, 0xcd, 0xef
+  };
+  
+  // IV de 16 bytes para modo CBC
+  byte iv[16] = {
+    0x02, 0x03, 0x05, 0x07,
+    0x09, 0x0b, 0x0d, 0xaf,
+    0x10, 0x32, 0x54, 0x76,
+    0x98, 0xab, 0xcd, 0xef
+  };
 
 void setup()
 {
@@ -67,8 +86,21 @@ void loop()
     String json;
     serializeJson(doc, json);
 
-    // Send JSON string
-    webSocket.sendTXT(json);
+    // Convertir a char* con padding
+    int jsonLen = json.length() + 1;
+    char plainText[jsonLen];
+    json.toCharArray(plainText, jsonLen);
+
+    // Redondear al múltiplo de 16
+    int paddedLen = ((jsonLen + 15) / 16) * 16;
+    for (int i = jsonLen; i < paddedLen; i++) plainText[i] = '\0';
+
+    // Encriptar con AES-128 CBC
+    byte encrypted[paddedLen];
+    aesLib.encrypt((const byte*)plainText, paddedLen, encrypted, key1, 128, iv);
+
+    // Enviar datos cifrados al servidor por WebSocket
+    webSocket.sendBIN(encrypted, paddedLen);
 }
 
 String uidToDecString(byte *buffer, byte bufferSize)
